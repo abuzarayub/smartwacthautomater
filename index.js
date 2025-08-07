@@ -2,6 +2,7 @@ require('dotenv').config();
 console.log(`[${new Date().toISOString()}] [INIT] Loaded environment variables from .env`);
 
 const express = require('express');
+const cors = require('cors');
 const app=express();
 console.log(`[${new Date().toISOString()}] [INIT] Imported Express module`);
 
@@ -43,6 +44,10 @@ app.use((req, res, next) => {
 // Middleware: JSON body parsing
 console.log(`[${new Date().toISOString()}] [INIT] Adding JSON body-parser middleware`);
 app.use(bodyParser.json());
+
+// Enable CORS for all origins
+console.log(`[${new Date().toISOString()}] [INIT] Enabling CORS for all origins`);
+app.use(cors());
 
 // Mount routes with logging
 console.log(`[${new Date().toISOString()}] [INIT] Mounting fitrockr routes at /api/fitrockr`);
