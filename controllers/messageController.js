@@ -9,18 +9,17 @@ const generateMessage = async (req, res) => {
   const prompt = `Based on this health data, generate a personalized coaching message:\n${JSON.stringify(healthData)}`;
 
   try {
-    // const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    //   model: "gpt-3.5-turbo",
-    //   messages: [{ role: "user", content: prompt }],
-    // }, {
-    //   headers: {
-    //     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    //     'Content-Type': 'application/json'
-    //   }
-    // });
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    // const message = response.data.choices[0].message.content;
-    const message = `This is a random test message: ${Math.random().toString(36).substring(7)}`;
+    const message = response.data.choices[0].message.content;
     res.json({ message });
   } catch (error) {
     console.error(`[${new Date().toISOString()}] [MESSAGE] Error in generateMessage: ${error.message}`);
@@ -34,9 +33,9 @@ const generateMessage = async (req, res) => {
  * then generates a personalized message.
  */
 const generateMessageByUserId = async (req, res) => {
- 
-  console.log(`[${new Date().toISOString()}] [MESSAGE] generateMessageByUserId request received for userId: ${userId}`);
   const userId = req.query.userId;
+  console.log(`[${new Date().toISOString()}] [MESSAGE] generateMessageByUserId request received for userId: ${userId}`);
+ 
   
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
@@ -114,18 +113,17 @@ const generateMessageByUserId = async (req, res) => {
     // Generate personalized message
     const prompt = `Generate a personalized health coaching message for ${userName} based on this health data:\n${JSON.stringify(healthData)}. Start with "Hi ${userName}" and keep it motivational and concise.`;
 
-    // const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    //   model: "gpt-3.5-turbo",
-    //   messages: [{ role: "user", content: prompt }],
-    // }, {
-    //   headers: {
-    //     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    //     'Content-Type': 'application/json'
-    //   }
-    // });
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    // const message = response.data.choices[0].message.content;
-    const message = `This is a random test message for user ${userName}: ${Math.random().toString(36).substring(7)}`;
+    const message = response.data.choices[0].message.content;
     res.json({ message });
   } catch (error) {
     console.error(`[${new Date().toISOString()}] [MESSAGE] Error in generateMessageByUserId for userId ${userId}: ${error.message}`);
