@@ -33,7 +33,7 @@ const generateMessage = async (req, res) => {
  * then generates a personalized message.
  */
 const generateMessageByUserId = async (req, res) => {
-  const userId = req.query.userId;
+ 
   console.log(`[${new Date().toISOString()}] [MESSAGE] generateMessageByUserId request received for userId: ${userId}`);
   const userId = req.query.userId;
   
