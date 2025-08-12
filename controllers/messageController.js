@@ -4,6 +4,7 @@ const axios = require('axios');
  * Generate a personalized coaching message based on health data.
  */
 const generateMessage = async (req, res) => {
+  console.log(`[${new Date().toISOString()}] [MESSAGE] generateMessage request received: ${JSON.stringify(req.body)}`);
   const { healthData } = req.body;
   const prompt = `Based on this health data, generate a personalized coaching message:\n${JSON.stringify(healthData)}`;
 
@@ -21,6 +22,7 @@ const generateMessage = async (req, res) => {
     const message = response.data.choices[0].message.content;
     res.json({ message });
   } catch (error) {
+    console.error(`[${new Date().toISOString()}] [MESSAGE] Error in generateMessage: ${error.message}`);
     res.status(500).json({ error: error.message });
   }
 };
@@ -31,6 +33,8 @@ const generateMessage = async (req, res) => {
  * then generates a personalized message.
  */
 const generateMessageByUserId = async (req, res) => {
+  const userId = req.query.userId;
+  console.log(`[${new Date().toISOString()}] [MESSAGE] generateMessageByUserId request received for userId: ${userId}`);
   const userId = req.query.userId;
   
   if (!userId) {
@@ -122,7 +126,7 @@ const generateMessageByUserId = async (req, res) => {
     const message = response.data.choices[0].message.content;
     res.json({ message });
   } catch (error) {
-    console.error('Error generating message:', error.message);
+    console.error(`[${new Date().toISOString()}] [MESSAGE] Error in generateMessageByUserId for userId ${userId}: ${error.message}`);
     res.status(500).json({ error: error.message });
   }
 };
