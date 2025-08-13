@@ -6,7 +6,8 @@ const axios = require('axios');
 const generateMessage = async (req, res) => {
   console.log(`[${new Date().toISOString()}] [MESSAGE] generateMessage request received: ${JSON.stringify(req.body)}`);
   const { healthData } = req.body;
-  const prompt = `Based on this health data, generate a personalized coaching message:\n${JSON.stringify(healthData)}`;
+  const prompt = `Based on this health data, generate a personalized coaching message in dutch languages and dont include "hi" , "hello" greeting words in starting instead directly give coaching message and dont include any characters or quotation marks:\n${JSON.stringify(healthData)}`; 
+
 
   try {
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
