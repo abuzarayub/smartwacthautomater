@@ -61,6 +61,9 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
+# Ensure .env is ignored even if previously tracked
+.env
+
 # IDE
 .vscode/
 .idea/
