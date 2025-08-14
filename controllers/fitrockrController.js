@@ -9,6 +9,29 @@ const headers = {
 };
 
 // GET /users
+const getUsers = async (req, res) => {
+  try {
+    console.log('Fetching all users from Fitrockr...');
+    const { data: users } = await axios.get(`${FITROCKR_BASE_URL}?page=0&size=100`, { headers });
+
+    if (Array.isArray(users) && users.length) {
+      console.log(`✅ Retrieved ${users.length} users.`);
+      return res.json(users);
+    }
+
+    console.warn('⚠️ No users found.');
+    return res.status(404).json({ message: 'No users found.' });
+
+  } catch (err) {
+    console.error('❌ Error fetching users:', err.response?.status, err.response?.data || err.message);
+    return res.status(err.response?.status || 500).json({
+      message: err.message,
+      details: err.response?.data || 'Unknown error'
+    });
+  }
+};
+
+// GET /users/:userId
 const getUser = async (req) => {
   const { userId } = req.params;
   const idStr = String(userId); // treat as string (works for "68627e3bffe30512673b49ef")
@@ -28,6 +51,9 @@ const getUser = async (req) => {
       : [];
 
     console.log("all users count:", users.length);
+    
+    // Log all user IDs to help with debugging
+    console.log("All user IDs in Fitrockr:", users.map(u => ({ id: u?.id, name: u?.firstName })));
     // Compare as strings so mixed types won't break the find
     const user = users.find(u => String(u?.id) === idStr);
 
@@ -62,38 +88,11 @@ const getUser = async (req) => {
     throw err;
   }
 };
-// GET /users/:userId
-const getUser = async (req, res) => {
-  const { userId } = req.params;
-
-  try {
-    console.log(`Fetching all users to find ID ${userId}...`);
-    const { data: users } = await axios.get(`${FITROCKR_BASE_URL}?page=0&size=100`, { headers });
-
-    const user = users.find(u => u.id === userId);
-
-    if (user) {
-      console.log(`✅ User ${userId} found:`, user);
-      return res.json(user);
-    }
-
-    console.warn(`⚠️ User ${userId} not found.`);
-    return res.status(404).json({ message: `No user found with ID ${userId}.` });
-
-  } catch (err) {
-    console.error(`❌ Error fetching user ${userId}:`, err.response?.status, err.response?.data || err.message);
-    return res.status(err.response?.status || 500).json({
-      message: err.message,
-      details: err.response?.data || 'Unknown error'
-    });
-  }
-};
-
 // GET /users/:userId/dailySummaries
 
 
 
-const getDailySummary = async (req, res) => {
+const getDailySummary = async (req) => {
   const userId = req.params.userId;
   const { startDate, endDate } = req.query;
 
@@ -104,18 +103,28 @@ const getDailySummary = async (req, res) => {
     const summary = response.data;
     if (summary) {
       console.log(`✅ Summary found for user ${userId} content is ${JSON.stringify(summary)}`);
-      res.json(summary);
+      return summary;
     } else {
       console.warn(`⚠️ No summary found for user ${userId}`);
-      res.status(404).json({ message: "No summary found." });
+      throw new Error("No summary found.");
     }
 
   } catch (error) {
-    console.error('❌ Fitrockr dailySummary error:', error.response?.status, error.response?.data);
-    res.status(error.response?.status || 500).json({
-      message: error.message,
-      details: error.response?.data || 'Unknown error'
-    });
+    // Ensure error.response exists so downstream handlers that read
+    // error.response.status won't crash with "Cannot read properties of undefined".
+    if (!error || typeof error !== 'object') {
+      const wrapper = new Error(String(error));
+      wrapper.response = { status: 500, data: String(error) };
+      throw wrapper;
+    }
+
+    if (!error.response) {
+      // If this was an axios/network error without response, provide a safe shape
+      error.response = { status: 500, data: error.message || 'Unknown error' };
+    }
+
+    console.error('❌ Fitrockr dailySummary error:', error.response.status, error.response.data);
+    throw error;
   }
 
 };
