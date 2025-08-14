@@ -9,28 +9,59 @@ const headers = {
 };
 
 // GET /users
-const getUsers = async (req, res) => {
-  try {
-    console.log('Fetching all users from Fitrockr...');
-    const { data: users } = await axios.get(`${FITROCKR_BASE_URL}?page=0&size=100`, { headers });
+const getUser = async (req) => {
+  const { userId } = req.params;
+  const idStr = String(userId); // treat as string (works for "68627e3bffe30512673b49ef")
 
-    if (Array.isArray(users) && users.length) {
-      console.log(`✅ Retrieved ${users.length} users.`);
-      return res.json(users);
+  try {
+    console.log(`Fetching all users to find ID ${idStr}...`);
+    const resp = await axios.get(`${FITROCKR_BASE_URL}?page=0&size=100`, { headers });
+
+    // Defensive: normalize payload to an array of users
+    const payload = resp?.data;
+    const users = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.content)
+      ? payload.content
+      : Array.isArray(payload?.data)
+      ? payload.data
+      : [];
+
+    console.log("all users count:", users.length);
+    // Compare as strings so mixed types won't break the find
+    const user = users.find(u => String(u?.id) === idStr);
+
+    if (user) {
+      console.log(`✅ User ${idStr} found:`, user);
+      return { data: user };
     }
 
-    console.warn('⚠️ No users found.');
-    return res.status(404).json({ message: 'No users found.' });
+    console.warn(`⚠️ User ${idStr} not found.`);
+
+    // Create an error object that includes a `response` property so
+    // callers that access err.response.status won't throw.
+    const notFoundErr = new Error(`No user found with ID ${idStr}.`);
+    notFoundErr.response = { status: 404, data: { message: `No user found with ID ${idStr}` } };
+    throw notFoundErr;
 
   } catch (err) {
-    console.error('❌ Error fetching users:', err.response?.status, err.response?.data || err.message);
-    return res.status(err.response?.status || 500).json({
-      message: err.message,
-      details: err.response?.data || 'Unknown error'
-    });
+    // Ensure err.response exists so downstream handlers that read
+    // err.response.status won't crash with "Cannot read properties of undefined".
+    if (!err || typeof err !== 'object') {
+      const wrapper = new Error(String(err));
+      wrapper.response = { status: 500, data: String(err) };
+      throw wrapper;
+    }
+
+    if (!err.response) {
+      // If this was an axios/network error without response, provide a safe shape
+      err.response = { status: 500, data: err.message || 'Unknown error' };
+    }
+
+    console.error(`❌ Error fetching user ${idStr}:`, err.response.status, err.response.data);
+    throw err;
   }
 };
-
 // GET /users/:userId
 const getUser = async (req, res) => {
   const { userId } = req.params;
